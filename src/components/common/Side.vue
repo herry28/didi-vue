@@ -7,6 +7,7 @@
       background-color="#33aef0"
       text-color="#fff"
       active-text-color="#ffd04b">
+      <h3>didi后台管理系统</h3>
       <el-menu-item 
       :index="item.path" 
       @click="clickMenu(item)"
@@ -64,5 +65,9 @@ export default {
   .el-menu{
     height: 1000px;
     border: none;
+  }
+  .el-menu h3{
+     color: aliceblue;
+     text-align: center;
   }
 </style>

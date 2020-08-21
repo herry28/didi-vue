@@ -5,7 +5,7 @@
                 <div class="user">
                     <img :src="userImg" alt="">
                     <div class="userinfo">
-                        <p class='name'>herry</p>
+                        <p class='name'>zouhai</p>
                         <p class='access'>超级管理员</p>
                     </div>
                 </div>
@@ -14,8 +14,14 @@
                     <p>上次登录地点：<span>深圳</span></p>
                 </div>
             </el-card>
-            <el-card shadow='hover' style="height:522px;margin-top:20px">
-                鼠标悬浮式显示
+            <el-card shadow='hover' style="margin-top:20px">
+               <el-table :data='tableData'>
+                   <el-table-column 
+                   v-for='(val,key) in tableLabel'
+                   :key='key'
+                   :prop='key'
+                   :label='val'></el-table-column>
+               </el-table>
             </el-card>
         </el-col>
         <el-col :span='16'>
@@ -29,20 +35,23 @@
                 </el-card>
             </div>
              <el-card shadow='hover'>
-                <div style="height:280px">
+                <echart style="height:280px">
 
-                </div>
+                </echart>
             </el-card>
             <div class="graph">
+                <!-- 折线图 -->
                 <el-card shadow='hover'>
-                    <div style="height:260px">
-
-                    </div>
+                    <echart 
+                    :chartData='echartData.order'
+                    style="height:260px">
+                    {{echartData.order}}
+                    </echart>
                 </el-card>
                  <el-card shadow='hover'>
-                    <div style="height:260px">
+                    <echart style="height:260px">
 
-                    </div>
+                    </echart>
                 </el-card>
             </div>
         </el-col>
@@ -52,14 +61,11 @@
 
 
 <script>
+import Echart from '../../components/echarts/Echarts'
 export default {
-    mounted(){
-        this.$http.get('/home/getHomeData').then(
-            res=>{
-                console.log(res.data)
-            }
-        )
-    },
+   components:{
+       Echart
+   },
     data(){
         return{
             userImg:require('../../assets/imgs/pic.jpg'),
@@ -101,8 +107,83 @@ export default {
                     color:'#5ba1ef'
                 },
                
-            ]
+            ],
+            // 表格数据
+            tableData:[],
+            tableLabel:{
+                name:'名字',
+                todayBuy:'今日购买',
+                monthBuy:'本月购买', 
+                totalBuy:'总购买' 
+            },
+            // 图表数据
+            echartData:{
+                // 订单数据
+                order:{
+                    xData:[],
+                    series:[]
+                },
+                user:{
+                    xData:[],
+                    series:[]
+                },
+                video:{
+                    series:[]
+                }
+            }
         }
+    },
+    methods:{
+        getHomeData(){
+            this.$http.get('/home/getHomeData').then(
+                res=>{
+                    this.tableData=res.data.data.tableData
+                    //  console.log(this.tableData)
+                    //  console.log(res.data)
+                     //折线图数据
+                     const order=res.data.data.orderData
+                    //  console.log(order)
+                    //  折线图横坐标
+                     this.echartData.order.xData=order.date
+                    // 取出series中name部分---键名
+                     let keyArray=Object.keys(order.data[0])
+                    //  console.log(keyArray)
+                    keyArray.forEach(key=>{
+                        this.echartData.order.series.push({
+                            name:key==='wechat'?'小程序':key,
+                            data:order.data.map(item=>item[key]),
+                            type:'line'
+                        })
+                    })
+                    // 柱状图数据
+                    const user=res.data.data.userData
+                    // console.log(user)
+                    this.echartData.user.xData=user.map(item=>item.date)
+                    this.echartData.user.series.push({
+                        name:'新增用户',
+                        data:user.map(item=>item.new),
+                        type:'bar'
+                    })
+                     this.echartData.user.series.push({
+                        name:'活跃用户',
+                        data:user.map(item=>item.active),
+                        type:'bar'
+                    })
+                    // 饼图数据
+                    const video=res.data.data.videoData
+                    // console.log(video)
+                    this.echartData.video.series.push({
+                        data:video,
+                        type:'pie'
+                    })
+
+
+                }
+            )
+        }
+    },
+    created(){
+        this.getHomeData()
     }
 }
 </script>
